@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -54,6 +55,11 @@ func (g *Game) Play(t *Terminal) error {
 	fmt.Println("Enter the digits from 1 to 9...")
 
 	for {
+		if g.board.isFull() {
+			fmt.Println("The match is drawn...")
+			os.Exit(0)
+		}
+
 		input, err := t.reader.ReadString('\n')
 		if err != nil {
 			return err
@@ -79,13 +85,57 @@ func (g *Game) Play(t *Terminal) error {
 			continue
 		}
 
-		if g.board.isFull() {
-			fmt.Println("The match is drawn...")
-			return nil
-		}
 		g.board.cells[row][col] = g.currentPlayer.Symbol
 		g.board.DisplayBoard()
+		if g.winner() {
+			fmt.Printf("The winner is %s", g.currentPlayer.Name)
+			os.Exit(0)
+		}
+		g.switchPlayer()
 	}
+}
+
+func (g *Game) switchPlayer() {
+	if g.currentPlayer == g.player1 {
+		fmt.Println("Player 2:")
+		g.currentPlayer = g.player2
+	} else {
+		fmt.Println("Player 1:")
+		g.currentPlayer = g.player1
+	}
+}
+
+func (g *Game) winner() bool {
+	symbol := g.currentPlayer.Symbol
+	for i := 0; i < 3; i++ {
+		if g.board.cells[i][0] == symbol &&
+			g.board.cells[i][1] == symbol &&
+			g.board.cells[i][2] == symbol {
+			return true
+		}
+	}
+
+	for i := 0; i < 3; i++ {
+		if g.board.cells[0][i] == symbol &&
+			g.board.cells[1][i] == symbol &&
+			g.board.cells[2][i] == symbol {
+			return true
+		}
+	}
+
+	if g.board.cells[0][0] == symbol &&
+		g.board.cells[1][1] == symbol &&
+		g.board.cells[2][2] == symbol {
+		return true
+	}
+
+	if g.board.cells[0][2] == symbol &&
+		g.board.cells[1][1] == symbol &&
+		g.board.cells[2][0] == symbol {
+		return true
+	}
+
+	return false
 }
 
 func WelcomeMessage() {
